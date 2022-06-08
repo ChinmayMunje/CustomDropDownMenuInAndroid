@@ -13,14 +13,14 @@
         android:theme="@style/Theme.GoogleMapsRoutes"
         android:usesCleartextTraffic="true">
         <activity android:name=".Retrofit.AddDataActivity"></activity>
-        <activity android:name=".Retrofit.HomeActivity">
+        <activity android:name=".Retrofit.HomeActivity"></activity>
+        <activity android:name=".DatePickerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DatePickerActivity"></activity>
         <activity android:name=".CustomSpinner.DropDownActivity" />
         <activity android:name=".GlideActivity" />
         <activity android:name=".MainActivity" />
