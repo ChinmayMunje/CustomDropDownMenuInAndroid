@@ -192,7 +192,6 @@
                 android:visibility="gone"
                 app:backgroundTint="@color/button_back" />
 
-
         </LinearLayout>
 
         <!--progress bar for loading indicator-->
@@ -202,11 +201,8 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_gravity="center"
-            android:indeterminate="true"
+            android:indeterminateTint="@color/white"
             android:visibility="gone" />
 
-
     </RelativeLayout>
-
-
 </ScrollView>

@@ -9,10 +9,20 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.textfield.TextInputEditText;
 import com.gtappdevelopers.googlemapsroutes.R;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -66,9 +76,9 @@ public class AddDataActivity extends AppCompatActivity {
                 String courseImg = courseImgLinkEdt.getText().toString();
                 String courseLink = courseLinkEdt.getText().toString();
                 if (getIntent().getStringExtra("type") != null && getIntent().getStringExtra("type").equals("edit")) {
-                    updateCourse(courseName, courseDuration, coursePrice, courseImg, courseLink, courseId);
+                    updateCourseVolley(courseName, courseDuration, coursePrice, courseImg, courseLink, courseId);
                 } else {
-                    addNewCourse(courseName, courseDuration, coursePrice, courseImg, courseLink);
+                    addNewCourseVolley(courseName, courseDuration, coursePrice, courseImg, courseLink);
                 }
             }
         });
@@ -76,118 +86,108 @@ public class AddDataActivity extends AppCompatActivity {
         deleteCourseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteCourse(courseId);
+                deleteCourseVolley(courseId);
             }
         });
-
     }
 
-    private void addNewCourse(String courseName, String courseDUration, String coursePrice, String courseImg, String courseLink) {
+    private void addNewCourseVolley(String courseName, String courseDUration, String coursePrice, String courseImg, String courseLink) {
+        String url = "https://folkish-star.000webhostapp.com/courses/addCourse.php";
         loadingPB.setVisibility(View.VISIBLE);
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://folkish-star.000webhostapp.com/courses/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RetrofitAPI retrofitAPI = retrofit.create(RetrofitAPI.class);
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("courseName", courseName)
-                .addFormDataPart("courseImg", courseImg)
-                .addFormDataPart("courseDuration", courseDUration)
-                .addFormDataPart("coursePrice", coursePrice)
-                .addFormDataPart("courseLink", courseLink)
-                .build();
-
-        retrofitAPI.addCourse(requestBody).enqueue(new Callback<ResponseBody>() {
+        RequestQueue queue = Volley.newRequestQueue(AddDataActivity.this);
+        StringRequest request = new StringRequest(Request.Method.POST, url, new com.android.volley.Response.Listener<String>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                loadingPB.setVisibility(View.GONE);
-                Log.e("TAG", "RESPONSE IS " + response.code());
+            public void onResponse(String response) {
                 Toast.makeText(AddDataActivity.this, "Course Added successfully..", Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(AddDataActivity.this, HomeActivity.class);
                 startActivity(i);
                 finish();
             }
-
+        }, new com.android.volley.Response.ErrorListener() {
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e("TAG", "ERROR IS " + t.getMessage());
+            public void onErrorResponse(VolleyError error) {
+                loadingPB.setVisibility(View.GONE);
+                Toast.makeText(AddDataActivity.this, "Fail to add course..", Toast.LENGTH_SHORT).show();
             }
-        });
+        }) {
+            @Nullable
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("courseName", courseName);
+                params.put("courseDuration", courseDUration);
+                params.put("coursePrice", coursePrice);
+                params.put("courseImg", courseImg);
+                params.put("courseLink", courseLink);
+                return params;
+            }
+        };
+        queue.add(request);
     }
 
-    private void deleteCourse(String courseId) {
+    private void deleteCourseVolley(String courseId) {
+        String url = "https://folkish-star.000webhostapp.com/courses/deleteCourse.php";
         loadingPB.setVisibility(View.VISIBLE);
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://folkish-star.000webhostapp.com/courses/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RetrofitAPI retrofitAPI = retrofit.create(RetrofitAPI.class);
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("id", courseId)
-                .build();
-
-        retrofitAPI.deleteCourse(requestBody).enqueue(new Callback<ResponseBody>() {
+        RequestQueue queue = Volley.newRequestQueue(AddDataActivity.this);
+        StringRequest request = new StringRequest(Request.Method.POST, url, new com.android.volley.Response.Listener<String>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.code() == 200) {
-                    loadingPB.setVisibility(View.GONE);
-                    Toast.makeText(AddDataActivity.this, "Course Deleted..", Toast.LENGTH_SHORT).show();
-                    Intent i = new Intent(AddDataActivity.this, HomeActivity.class);
-                    startActivity(i);
-                    finish();
-                }
+            public void onResponse(String response) {
+                Toast.makeText(AddDataActivity.this, "Course Deleted successfully..", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(AddDataActivity.this, HomeActivity.class);
+                startActivity(i);
+                finish();
             }
-
+        }, new com.android.volley.Response.ErrorListener() {
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e("TAG", "Fail to delete course..");
+            public void onErrorResponse(VolleyError error) {
+                loadingPB.setVisibility(View.GONE);
                 Toast.makeText(AddDataActivity.this, "Fail to delete course..", Toast.LENGTH_SHORT).show();
             }
-        });
+        }) {
+            @Nullable
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("id", courseId);
+                return params;
+            }
+        };
+        queue.add(request);
     }
 
-    private void updateCourse(String courseName, String courseDuration, String coursePrice, String courseImg, String courseLink, String courseId) {
+    private void updateCourseVolley(String courseName, String courseDuration, String coursePrice, String courseImg, String courseLink, String courseId) {
+        String url = "https://folkish-star.000webhostapp.com/courses/updateCourse.php";
         loadingPB.setVisibility(View.VISIBLE);
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://folkish-star.000webhostapp.com/courses/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RetrofitAPI retrofitAPI = retrofit.create(RetrofitAPI.class);
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("courseName", courseName)
-                .addFormDataPart("id", courseId)
-                .addFormDataPart("courseImg", courseImg)
-                .addFormDataPart("courseDuration", courseDuration)
-                .addFormDataPart("coursePrice", coursePrice)
-                .addFormDataPart("courseLink", courseLink)
-                .build();
-
-        retrofitAPI.updateCourse(requestBody).enqueue(new Callback<ResponseBody>() {
+        RequestQueue queue = Volley.newRequestQueue(AddDataActivity.this);
+        StringRequest request = new StringRequest(Request.Method.POST, url, new com.android.volley.Response.Listener<String>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.code() == 200) {
-                    loadingPB.setVisibility(View.GONE);
-                    Toast.makeText(AddDataActivity.this, "Course Updated..", Toast.LENGTH_SHORT).show();
-                    Intent i = new Intent(AddDataActivity.this, HomeActivity.class);
-                    startActivity(i);
-                    finish();
-                }
-
+            public void onResponse(String response) {
+                Toast.makeText(AddDataActivity.this, "Course Updated successfully..", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(AddDataActivity.this, HomeActivity.class);
+                startActivity(i);
+                finish();
             }
-
+        }, new com.android.volley.Response.ErrorListener() {
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onErrorResponse(VolleyError error) {
+                loadingPB.setVisibility(View.GONE);
                 Toast.makeText(AddDataActivity.this, "Fail to update course..", Toast.LENGTH_SHORT).show();
-
             }
-        });
-
+        }) {
+            @Nullable
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("id", courseId);
+                params.put("courseName", courseName);
+                params.put("courseDuration", courseDuration);
+                params.put("coursePrice", coursePrice);
+                params.put("courseImg", courseImg);
+                params.put("courseLink", courseLink);
+                return params;
+            }
+        };
+        queue.add(request);
     }
 
 }
